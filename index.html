@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <title>奉世文 · 星空简历</title>
+    <style>
+        /* ===== CSS 变量 & 重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --text: #e8edf5;
+            --text-secondary: #c0cfe0;
+            --text-muted: #8899bb;
+            --primary: #4facfe;
+            --primary-dark: #2a7faa;
+            --accent: #00f2fe;
+            --card-bg: rgba(10, 14, 30, 0.7);
+            --border: rgba(255, 255, 255, 0.08);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --radius: 14px;
+            --transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: var(--font);
+            background: #0a0e1e;
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: var(--safe-top) 0 var(--safe-bottom) 0;
+            -webkit-font-smoothing: antialiased;
+            cursor: default;
+        }
+
+        /* ===== 生命之树背景图 ===== */
+        #treeBg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            background-image: url('tree.jpg');
+            /* 放大 ~16%：适度放大让树更突出；两侧暗区经星空 screen 叠加后即为深空宇宙，符合主题 */
+            background-size: 116%;
+            /* 垂直略上移：树冠+树干上抬，给底部根须和正文卡片留呼吸空间，平衡上重 */
+            background-position: 50% 38%;
+            background-repeat: no-repeat;
+            /* 轻微暗化以保证文字可读性，但不改变树的形态 */
+            background-color: #0a0e1e;
+        }
+        /* 移动端竖屏：横向会被裁掉太多，改用 cover + 居中，保留树的核心 */
+        @media (max-width: 640px) and (orientation: portrait) {
+            #treeBg {
+                background-size: cover;
+                background-position: 50% 35%;
+            }
+        }
+        /* 顶部 & 底部柔和暗角，让导航栏/页脚文字更清晰，中间保留树的完整 */
+        #treeBg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(to bottom,
+                    rgba(10, 14, 30, 0.55) 0%,
+                    rgba(10, 14, 30, 0.15) 18%,
+                    rgba(10, 14, 30, 0.10) 50%,
+                    rgba(10, 14, 30, 0.15) 82%,
+                    rgba(10, 14, 30, 0.55) 100%);
+            pointer-events: none;
+        }
+
+        /* ===== 星空背景 Canvas（与树融合，screen 叠加发光） ===== */
+        #starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        /* ===== 光标粒子 Canvas（同样与树融合） ===== */
+        #cursorCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        /* ===== 内容容器 ===== */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 72px 20px 40px;
+        }
+
+        /* ===== 所有模块入场动画 ===== */
+        .animate-on-load {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeUp 0.8s ease forwards;
+        }
+        .animate-on-load:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+        .animate-on-load:nth-child(2) {
+            animation-delay: 0.25s;
+        }
+        .animate-on-load:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        .animate-on-load:nth-child(4) {
+            animation-delay: 0.55s;
+        }
+        .animate-on-load:nth-child(5) {
+            animation-delay: 0.7s;
+        }
+        .animate-on-load:nth-child(6) {
+            animation-delay: 0.85s;
+        }
+
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== 滚动触发动画 ===== */
+        .scroll-animate {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .scroll-animate.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== 导航栏 ===== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(10, 14, 30, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .navbar .brand {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+        .navbar .brand span {
+            color: var(--accent);
+        }
+        .navbar .nav-links {
+            display: flex;
+            gap: 16px;
+            list-style: none;
+        }
+        .navbar .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 4px 0;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition);
+            position: relative;
+        }
+        .navbar .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.4s ease;
+        }
+        .navbar .nav-links a:hover::after,
+        .navbar .nav-links a.active::after {
+            width: 100%;
+        }
+        .navbar .nav-links a:hover,
+        .navbar .nav-links a:active {
+            color: #fff;
+        }
+        .navbar .actions {
+            display: flex;
+            gap: 8px;
+        }
+        .navbar .actions button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: var(--transition);
+            min-height: 40px;
+            min-width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .navbar .actions button:hover,
+        .navbar .actions button:active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        /* 音乐按钮：播放时呼吸光晕 */
+        #musicToggle.playing {
+            color: var(--accent);
+            animation: musicPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes musicPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.5);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 12px 4px rgba(0, 242, 254, 0.25);
+                transform: scale(1.08);
+            }
+        }
+        #musicToggle.error {
+            color: #ff6b6b;
+            opacity: 0.7;
+        }
+        /* 音乐按钮：等待首次交互解锁时轻柔呼吸 */
+        #musicToggle.waiting {
+            color: var(--text-secondary);
+            animation: musicWait 2s ease-in-out infinite;
+        }
+        @keyframes musicWait {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+        }
+        /* 首次进入提示条：引导访客点击开启音乐 */
+        #musicHint {
+            position: fixed;
+            top: 64px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            z-index: 11;
+            background: rgba(10, 14, 30, 0.85);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            padding: 8px 18px;
+            border-radius: 20px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            white-space: nowrap;
+        }
+        #musicHint.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ===== Hero 区域 ===== */
+        .hero {
+            text-align: center;
+            padding: 30px 0 20px;
+        }
+        .hero .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 0 auto 16px;
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 40px rgba(79, 172, 254, 0.25);
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+            position: relative;
+        }
+        .hero .avatar::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(79, 172, 254, 0.15), transparent, rgba(0, 242, 254, 0.15), transparent);
+            animation: spinGlow 6s linear infinite;
+        }
+        @keyframes spinGlow {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .hero .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            position: relative;
+            z-index: 1;
+        }
+        .hero .avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 60px rgba(79, 172, 254, 0.4);
+        }
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #f0f5ff, var(--primary), var(--accent), var(--primary));
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientFlow 6s ease-in-out infinite;
+        }
+        @keyframes gradientFlow {
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+        .hero .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            letter-spacing: 1px;
+            font-weight: 300;
+        }
+        .hero .tagline {
+            margin-top: 16px;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            max-width: 560px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.8;
+            background: var(--card-bg);
+            padding: 16px 22px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(4px);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero .tagline::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(79, 172, 254, 0.05), transparent, rgba(0, 242, 254, 0.05), transparent);
+            animation: spinGlow 10s linear infinite;
+        }
+        .hero .tagline * {
+            position: relative;
+            z-index: 1;
+        }
+        .hero .tagline .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .hero .tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 18px;
+        }
+        .hero .tags .tag {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            backdrop-filter: blur(4px);
+            transition: var(--transition);
+            cursor: default;
+        }
+        .hero .tags .tag:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        /* ===== 亮点数据卡片 ===== */
+        .highlights {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin: 28px 0 20px;
+        }
+        .highlights .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 12px;
+            text-align: center;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            perspective: 600px;
+        }
+        .highlights .card::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background: conic-gradient(from 0deg, transparent, rgba(79, 172, 254, 0.06), transparent, rgba(0, 242, 254, 0.06), transparent);
+            animation: spinGlow 8s linear infinite;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+        .highlights .card:hover::before {
+            opacity: 1;
+        }
+        .highlights .card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+            border-color: rgba(79, 172, 254, 0.3);
+        }
+        .highlights .card .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+        .highlights .card .label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+            margin-top: 4px;
+        }
+        .highlights .card .desc {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            line-height: 1.4;
+        }
+
+        /* ===== 联系方式 ===== */
+        .contact {
+            margin: 16px 0 24px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 18px;
+            box-shadow: var(--shadow);
+        }
+        .contact .item,
+        .contact a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+            padding: 4px 0;
+            min-height: 40px;
+            justify-content: center;
+            position: relative;
+        }
+        .contact .item::after,
+        .contact a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.4s ease;
+        }
+        .contact .item:hover::after,
+        .contact a:hover::after {
+            width: 60%;
+        }
+        .contact a:hover,
+        .contact a:active,
+        .contact .item:active {
+            color: var(--primary);
+        }
+        .contact .item .label {
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+        .contact .copy-feedback {
+            font-size: 0.7rem;
+            color: var(--accent);
+            margin-left: 4px;
+        }
+
+        /* ===== 通用 Section ===== */
+        .section {
+            margin-top: 40px;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .section-header h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+            position: relative;
+            display: inline-block;
+        }
+        .section-header h2::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 40%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 4px;
+            animation: lineGrow 1.5s ease forwards;
+        }
+        @keyframes lineGrow {
+            from {
+                width: 0;
+            }
+            to {
+                width: 40%;
+            }
+        }
+        .section-header .line {
+            flex: 1;
+            height: 2px;
+            background: var(--border);
+        }
+
+        /* ===== Tabs ===== */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 2px;
+        }
+        .tabs .tab-btn {
+            padding: 8px 18px;
+            border: none;
+            background: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: var(--transition);
+            position: relative;
+        }
+        .tabs .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 4px 4px 0 0;
+            transition: var(--transition);
+        }
+        .tabs .tab-btn:hover {
+            color: var(--text);
+        }
+        .tabs .tab-btn.active {
+            color: var(--primary);
+        }
+        .tabs .tab-btn.active::after {
+            width: 70%;
+        }
+        .tab-content {
+            display: none;
+            animation: fadeUp 0.5s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ===== 经历卡片 ===== */
+        .exp-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .exp-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(6px);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            perspective: 800px;
+        }
+        .exp-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.05), rgba(0, 242, 254, 0.02));
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
+        .exp-card:hover::before {
+            opacity: 1;
+        }
+        .exp-card:hover {
+            transform: translateY(-4px) rotateX(2deg);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+            border-color: rgba(79, 172, 254, 0.2);
+        }
+        .exp-card .header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 6px 14px;
+            margin-bottom: 10px;
+        }
+        .exp-card .header .company {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .exp-card .header .role {
+            font-weight: 500;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+        .exp-card .header .date {
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .exp-card .points {
+            list-style: none;
+            padding: 0;
+        }
+        .exp-card .points li {
+            position: relative;
+            padding-left: 22px;
+            margin-bottom: 6px;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        .exp-card .points li::before {
+            content: '▹';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: 700;
+            transition: transform 0.3s ease;
+        }
+        .exp-card:hover .points li::before {
+            transform: translateX(4px);
+        }
+        .exp-card .points li strong {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* ===== 技能 ===== */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .skills-category {
+            background: var(--card-bg);
+            backdrop-filter: blur(6px);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        .skills-category:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            border-color: rgba(79, 172, 254, 0.2);
+        }
+        .skills-category .cat-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #fff;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .skills-category .cat-title .icon {
+            font-size: 1.1rem;
+        }
+        .skill-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+        .skill-item:last-child {
+            border-bottom: none;
+        }
+        .skill-item .name {
+            font-weight: 500;
+        }
+        .skill-item .level {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            background: var(--border);
+            padding: 0 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .skill-item:hover .level {
+            transform: scale(1.05);
+        }
+        .skill-item .level.expert {
+            background: var(--primary);
+            color: #fff;
+        }
+        .skill-item .level.advanced {
+            background: var(--accent);
+            color: #0a0e1e;
+        }
+        .skill-item .level.intermediate {
+            background: var(--border);
+            color: var(--text-secondary);
+        }
+
+        /* ===== 教育 ===== */
+        .edu-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(6px);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        .edu-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            border-color: rgba(79, 172, 254, 0.2);
+        }
+        .edu-card .header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 6px 14px;
+        }
+        .edu-card .header .school {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .edu-card .header .major {
+            font-weight: 500;
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+        .edu-card .header .date {
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .edu-card .details {
+            margin-top: 10px;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        /* ===== 证书展示 ===== */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 6px;
+        }
+        .portfolio-grid .portfolio-item {
+            background: var(--card-bg);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            perspective: 600px;
+        }
+        .portfolio-grid .portfolio-item:hover {
+            transform: translateY(-6px) rotateY(2deg);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            border-color: rgba(79, 172, 254, 0.3);
+        }
+        .portfolio-grid .portfolio-item img {
+            width: 100%;
+            height: 170px;
+            object-fit: contain;
+            display: block;
+            background: #12162a;
+            padding: 6px;
+            transition: transform 0.6s ease;
+        }
+        .portfolio-grid .portfolio-item:hover img {
+            transform: scale(1.04);
+        }
+        .portfolio-grid .portfolio-item .caption {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-align: center;
+            border-top: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* ===== vibecoding 专区 ===== */
+        .vibecoding-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            text-align: center;
+        }
+        .vibecoding-card:hover {
+            border-color: rgba(79, 172, 254, 0.3);
+        }
+        .vibecoding-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .vibecoding-subtitle {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            margin-bottom: 18px;
+            line-height: 1.6;
+        }
+        .vibecoding-start {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 36px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #0a0e1e;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 20px rgba(79, 172, 254, 0.35);
+        }
+        .vibecoding-start:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 8px 30px rgba(0, 242, 254, 0.45);
+        }
+        .vibecoding-start:active {
+            transform: translateY(0) scale(0.98);
+        }
+        .vibecoding-external {
+            display: block;
+            margin-top: 16px;
+            font-size: 0.82rem;
+            color: var(--accent);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        .vibecoding-external:hover {
+            color: var(--primary);
+        }
+
+        /* ===== 飞机大战全屏浮窗 ===== */
+        .vibecoding-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            background: rgba(5, 8, 16, 0.94);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .vibecoding-modal.open {
+            display: flex;
+        }
+        .vibecoding-modal-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .vibecoding-modal-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--primary);
+        }
+        .vibecoding-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.3rem;
+            cursor: pointer;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .vibecoding-modal-close:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+        .vibecoding-modal-body {
+            flex: 1;
+            padding: 12px;
+            min-height: 0;
+        }
+        .vibecoding-modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #050810;
+            display: block;
+        }
+        .vibecoding-modal-tip {
+            padding: 8px 20px 14px;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .vibecoding-modal-tip a {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+        @media print {
+            .vibecoding-modal { display: none !important; }
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            margin-top: 48px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+            letter-spacing: 1px;
+        }
+
+        /* ===== 返回顶部 ===== */
+        .back-top {
+            position: fixed;
+            bottom: 24px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #0a0e1e;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(79, 172, 254, 0.3);
+            transition: var(--transition);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(16px) scale(0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .back-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+        .back-top:hover {
+            background: var(--accent);
+            transform: translateY(-4px) scale(1.05);
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 640px) {
+            .container {
+                padding: 64px 16px 32px;
+            }
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            .hero .avatar {
+                width: 96px;
+                height: 96px;
+            }
+            .hero .tagline {
+                font-size: 0.85rem;
+                padding: 14px 16px;
+            }
+            .highlights {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .highlights .card {
+                padding: 14px 10px;
+            }
+            .highlights .card .number {
+                font-size: 1.6rem;
+            }
+            .contact {
+                gap: 6px 12px;
+                padding: 12px 14px;
+            }
+            .contact .item,
+            .contact a {
+                font-size: 0.75rem;
+                min-height: 36px;
+            }
+            .skills-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .portfolio-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .portfolio-grid .portfolio-item img {
+                height: 130px;
+            }
+            .navbar .nav-links {
+                gap: 10px;
+            }
+            .navbar .nav-links a {
+                font-size: 0.7rem;
+            }
+            .exp-card {
+                padding: 16px 18px;
+            }
+            .exp-card .header .date {
+                margin-left: 0;
+                width: 100%;
+            }
+            .edu-card {
+                padding: 16px 18px;
+            }
+            .section-header h2 {
+                font-size: 1.2rem;
+            }
+        }
+        @media (max-width: 400px) {
+            .highlights {
+                grid-template-columns: 1fr;
+            }
+            .portfolio-grid {
+                grid-template-columns: 1fr;
+            }
+            .navbar .nav-links {
+                display: none;
+            }
+        }
+
+        /* ===== 打印 ===== */
+        @media print {
+            #starfield,
+            #cursorCanvas {
+                display: none !important;
+            }
+            body {
+                background: #0a0e1e;
+                color: #e8edf5;
+            }
+            .navbar,
+            .back-top,
+            #musicHint {
+                display: none !important;
+            }
+            .container {
+                padding-top: 20px;
+                max-width: 100%;
+            }
+            .highlights .card,
+            .contact,
+            .exp-card,
+            .skills-category,
+            .edu-card,
+            .portfolio-item {
+                background: rgba(10, 14, 30, 0.8);
+                border: 1px solid #445;
+                box-shadow: none;
+                backdrop-filter: none;
+                break-inside: avoid;
+            }
+            .hero h1 {
+                -webkit-text-fill-color: #4facfe;
+                background: none;
+                color: #4facfe;
+            }
+            .tabs .tab-btn {
+                display: none;
+            }
+            .tab-content {
+                display: block !important;
+            }
+            .tab-content.active {
+                display: block !important;
+            }
+            .highlights .card::before,
+            .exp-card::before,
+            .hero .tagline::before,
+            .hero .avatar::after {
+                display: none !important;
+            }
+        }
+
+        /* ===== 滚动条 ===== */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-dark);
+            border-radius: 4px;
+        }
+
+        /* ===== 降低动效偏好 ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .scroll-animate {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+            .animate-on-load {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 生命之树背景（与星空融合） ===== -->
+    <div id="treeBg"></div>
+    <!-- ===== 星空背景（screen 叠加在树之上） ===== -->
+    <canvas id="starfield"></canvas>
+    <!-- ===== 光标粒子 ===== -->
+    <canvas id="cursorCanvas"></canvas>
+    <!-- ===== 背景音乐《Old Memory》- 蓝云木 ===== -->
+    <audio id="bgMusic" src="%E8%93%9D%E4%BA%91%E6%9C%A8%20-%20Old%20Memory.mp3" loop preload="auto"></audio>
+    <div id="musicHint">🎵 轻点任意位置，聆听背景音乐</div>
+
+    <!-- ===== 导航栏 ===== -->
+    <nav class="navbar animate-on-load">
+        <div class="brand">奉<span>世文</span></div>
+        <ul class="nav-links">
+            <li><a href="#experience">经历</a></li>
+            <li><a href="#skills">素养</a></li>
+            <li><a href="#education">教育</a></li>
+            <li><a href="#portfolio">证书</a></li>
+            <li><a href="#vibecoding">vibecoding</a></li>
+        </ul>
+        <div class="actions">
+            <button id="musicToggle" title="播放/暂停背景音乐《Old Memory》">🎵</button>
+            <button onclick="window.print()" title="打印/下载PDF">🖨️</button>
+            <button id="themeToggle" title="切换深浅色">🌓</button>
+        </div>
+    </nav>
+
+    <!-- ===== 主内容 ===== -->
+    <main class="container">
+
+        <!-- Hero -->
+        <section class="hero animate-on-load">
+            <div class="avatar">
+                <img src="photo.jpg" alt="奉世文头像" loading="lazy" decoding="async">
+            </div>
+            <h1>奉世文</h1>
+            <div class="subtitle">建筑室内设计 · 准大一新生</div>
+            <div class="tagline">
+                <span class="highlight">内向沉稳</span>，高中三年担任<span class="highlight">团支书</span>，在组织协调中磨砺出细腻的洞察力与责任感。<br>
+                即将进入广西生态职业技术学院，主修建筑室内设计，期待用空间语言诠释生活美学。
+            </div>
+            <div class="tags">
+                <span class="tag"># 内向沉稳</span>
+                <span class="tag"># 团支书·领导力</span>
+                <span class="tag"># 建筑室内设计</span>
+                <span class="tag"># 空间美学</span>
+                <span class="tag"># 快速学习</span>
+            </div>
+        </section>
+
+        <!-- 亮点数据 -->
+        <section class="highlights animate-on-load" id="highlights"></section>
+
+        <!-- 联系方式 -->
+        <section class="contact animate-on-load" id="contact"></section>
+
+        <!-- 经历 -->
+        <section class="section scroll-animate" id="experience">
+            <div class="section-header"><h2>经历</h2><span class="line"></span></div>
+            <div class="tabs" id="expTabs" role="tablist"></div>
+            <div id="expContents"></div>
+        </section>
+
+        <!-- 核心素养 -->
+        <section class="section scroll-animate" id="skills">
+            <div class="section-header"><h2>核心素养</h2><span class="line"></span></div>
+            <div class="skills-grid" id="skillsGrid"></div>
+        </section>
+
+        <!-- 教育 -->
+        <section class="section scroll-animate" id="education">
+            <div class="section-header"><h2>教育 · 证书</h2><span class="line"></span></div>
+            <div id="educationContent"></div>
+            <div id="awardsContent"></div>
+        </section>
+
+        <!-- 证书展示 -->
+        <section class="section scroll-animate" id="portfolio">
+            <div class="section-header"><h2>证书展示</h2><span class="line"></span></div>
+            <div class="portfolio-grid" id="portfolioGrid"></div>
+        </section>
+
+        <!-- vibecoding 专区 -->
+        <section class="section scroll-animate" id="vibecoding">
+            <div class="section-header"><h2>vibecoding</h2><span class="line"></span></div>
+            <div class="vibecoding-card">
+                <div class="vibecoding-title">✈️ 飞机大战</div>
+                <div class="vibecoding-subtitle">点击下方按钮，在全屏浮窗中体验飞机大战。<br>键盘方向键 / WASD 控制移动，空格射击。</div>
+                <button class="vibecoding-start" id="vibecodingStart">▶️ 开始游戏</button>
+                <a class="vibecoding-external" href="https://fjdz-tttt1.netlify.app/" target="_blank" rel="noopener">🔗 在新标签页打开</a>
+            </div>
+        </section>
+
+        <!-- 飞机大战全屏浮窗 -->
+        <div class="vibecoding-modal" id="vibecodingModal" role="dialog" aria-modal="true" aria-label="飞机大战">
+            <div class="vibecoding-modal-bar">
+                <span class="vibecoding-modal-title">✈️ 飞机大战</span>
+                <button class="vibecoding-modal-close" id="vibecodingClose" aria-label="关闭">✕</button>
+            </div>
+            <div class="vibecoding-modal-body">
+                <iframe id="vibecodingIframe" src="" title="飞机大战" allowfullscreen></iframe>
+            </div>
+            <div class="vibecoding-modal-tip">如画面无法加载，请 <a href="https://fjdz-tttt1.netlify.app/" target="_blank" rel="noopener">在新标签页打开</a></div>
+        </div>
+
+        <footer class="footer scroll-animate">© 2026 奉世文 · 星空简历 · 更新于 2026.08</footer>
+    </main>
+
+    <!-- ===== 返回顶部 ===== -->
+    <button class="back-top" id="backTop" aria-label="返回顶部">↑</button>
+
+    <script>
+        // =====================================================================
+        //  数据
+        // =====================================================================
+        const resume = {
+            personal: {
+                name: '奉世文',
+                title: '建筑室内设计 · 准大一新生',
+                phone: '19197998329',
+                email: '2904181446@qq.com',
+                linkedin: '#',
+                github: '#',
+                blog: '#',
+                avatar: 'photo.jpg',
+                summary: '内向沉稳，高中三年担任团支书，在组织协调中磨砺出细腻的洞察力与责任感。即将进入广西生态职业技术学院，主修建筑室内设计，期待用空间语言诠释生活美学。',
+                tags: ['内向沉稳', '团支书·领导力', '建筑室内设计', '空间美学', '快速学习']
+            },
+            highlights: [
+                { number: '10+', label: '校级活动组织', desc: '高中三年统筹班级事务，组织校级主题活动' },
+                { number: '3年', label: '团支书经历', desc: '连续三年担任团支书，锻炼沟通与执行能力' },
+                { number: '∞', label: '未来可能性', desc: '即将进入大学，探索建筑与室内设计的无限可能' }
+            ],
+            experiences: [{
+                id: 'high-school',
+                category: '校园经历',
+                company: 'XX 中学',
+                role: '团支书',
+                date: '2021.09 – 2024.06',
+                points: [
+                    '连续三年担任班级团支书，统筹协调班级日常事务与团队建设，带领团支部获评校级“优秀团支部”。',
+                    '组织策划校级主题活动 <strong>10+ 场</strong>，涵盖文艺汇演、志愿服务、学科竞赛等，单场活动参与人数最多达 <strong>500+ 人</strong>，活动满意度评分达 95% 以上。',
+                    '负责班级团员的思想引领工作，定期开展团课学习与主题团日活动，班级团员活动参与率提升至 98%。',
+                    '在组织过程中锻炼了出色的沟通能力、执行力和统筹协调能力，能够高效调动资源并凝聚团队，多次获评校级“优秀学生干部”。'
+                ]
+            }],
+            skills: [{
+                category: '个人特质',
+                icon: '🌟',
+                items: [
+                    { name: '组织协调', level: 'expert' },
+                    { name: '逻辑推演', level: 'advanced' },
+                    { name: '沟通表达', level: 'advanced' },
+                    { name: '空间感知', level: 'intermediate' },
+                    { name: '快速学习', level: 'advanced' }
+                ]
+            }],
+            education: {
+                school: '广西生态职业技术学院',
+                major: '建筑室内设计',
+                date: '2024.09 起',
+                description: '准大一新生，对建筑与室内设计领域充满热情。计划在大学期间系统学习设计原理、施工工艺与数字化表现（AutoCAD、SketchUp、3ds Max等），通过项目实践与竞赛积累经验，逐步形成自己的设计语言。'
+            },
+            awards: [],
+            portfolio: [
+                { src: 'week.png', caption: '证书 1' },
+                { src: 'weekr.png', caption: '证书 2' },
+                { src: 'weekg.jpg', caption: '证书 3' },
+                { src: 'weekt.png', caption: '证书 4' }
+            ]
+        };
+
+        // =====================================================================
+        //  渲染工具
+        // =====================================================================
+        function $(s, c = document) { return c.querySelector(s); }
+
+        function $$(s, c = document) { return [...c.querySelectorAll(s)]; }
+
+        function ce(t, c = '', h = '') { const e = document.createElement(t); if (c) e.className = c; if (h) e.innerHTML = h; return e; }
+
+        // 数字滚动动画
+        function animateNumber(el, target, duration = 1500) {
+            const start = 0;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const current = Math.round(start + (target - start) * eased);
+                el.textContent = current + (typeof target === 'string' && target.includes('+') ? '+' : '');
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    el.textContent = target;
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        // 渲染高亮点
+        function renderHighlights() {
+            const c = $('#highlights');
+            c.innerHTML = '';
+            resume.highlights.forEach((h, idx) => {
+                const card = ce('div', 'card');
+                const numSpan = ce('span', 'number', h.number);
+                card.appendChild(numSpan);
+                const label = ce('div', 'label', h.label);
+                card.appendChild(label);
+                const desc = ce('div', 'desc', h.desc);
+                card.appendChild(desc);
+                c.appendChild(card);
+
+                // 数字滚动（延迟触发）
+                setTimeout(() => {
+                    const target = h.number;
+                    const num = target.replace('+', '');
+                    if (!isNaN(num) && num !== '∞') {
+                        animateNumber(numSpan, target, 1200);
+                    }
+                }, 300 + idx * 200);
+            });
+        }
+
+        // 渲染联系方式
+        function renderContact() {
+            const c = $('#contact');
+            const p = resume.personal;
+            c.innerHTML = `
+                <span class="item">📞 <span class="label">电话</span> ${p.phone}</span>
+                <span class="item" id="emailItem" style="cursor:pointer;">✉️ <span class="label">邮箱</span> ${p.email} <span id="copyFeedback" class="copy-feedback"></span></span>
+                <a href="${p.linkedin}" target="_blank">🔗 LinkedIn</a>
+                <a href="${p.github}" target="_blank">🐙 GitHub</a>
+                <a href="${p.blog}" target="_blank">📝 博客</a>
+            `;
+            document.getElementById('emailItem').addEventListener('click', function(e) {
+                const email = resume.personal.email;
+                const fb = document.getElementById('copyFeedback');
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(email).then(() => { fb.textContent = '✅ 已复制';
+                        setTimeout(() => { fb.textContent = ''; }, 2000); }).catch(() => fallbackCopy(email, fb));
+                } else { fallbackCopy(email, fb); }
+            });
+
+            function fallbackCopy(text, fb) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                ta.style.top = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy');
+                    fb.textContent = '✅ 已复制';
+                    setTimeout(() => { fb.textContent = ''; }, 2000); } catch (e) { fb.textContent = '❌ 复制失败';
+                    setTimeout(() => { fb.textContent = ''; }, 2000); }
+                ta.remove();
+            }
+        }
+
+        // 渲染经历
+        function renderExperience() {
+            const exp = resume.experiences;
+            const cats = ['全部', ...new Set(exp.map(e => e.category))];
+            const tabs = $('#expTabs');
+            tabs.innerHTML = '';
+            cats.forEach((cat, idx) => {
+                const btn = ce('button', 'tab-btn', cat);
+                btn.setAttribute('role', 'tab');
+                btn.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
+                btn.setAttribute('data-exp-tab', cat);
+                if (idx === 0) btn.classList.add('active');
+                btn.addEventListener('click', () => switchExpTab(cat));
+                tabs.appendChild(btn);
+            });
+            const cont = $('#expContents');
+            cont.innerHTML = '';
+            cats.forEach((cat, idx) => {
+                const pane = ce('div', 'tab-content');
+                pane.setAttribute('role', 'tabpanel');
+                pane.id = 'exp-panel-' + cat;
+                if (idx === 0) pane.classList.add('active');
+                const filtered = cat === '全部' ? exp : exp.filter(e => e.category === cat);
+                const list = ce('div', 'exp-list');
+                filtered.forEach(e => {
+                    const card = ce('div', 'exp-card');
+                    const pts = e.points.map(p => `<li>${p}</li>`).join('');
+                    card.innerHTML =
+                        `<div class="header"><span class="company">${e.company}</span><span class="role">${e.role}</span><span class="date">${e.date}</span></div><ul class="points">${pts}</ul>`;
+                    list.appendChild(card);
+                });
+                if (filtered.length === 0) { const empty = ce('p', 'text-muted', '暂无该分类下的经历，持续探索中…');
+                    list.appendChild(empty); }
+                pane.appendChild(list);
+                cont.appendChild(pane);
+            });
+            window._expTabs = cats;
+        }
+
+        function switchExpTab(cat) {
+            const btns = $$('#expTabs .tab-btn');
+            const panes = $$('#expContents .tab-content');
+            btns.forEach((b, i) => {
+                const isActive = b.getAttribute('data-exp-tab') === cat;
+                b.classList.toggle('active', isActive);
+                b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                if (panes[i]) panes[i].classList.toggle('active', isActive);
+            });
+        }
+
+        // 渲染技能
+        function renderSkills() {
+            const c = $('#skillsGrid');
+            c.innerHTML = '';
+            resume.skills.forEach(cat => {
+                const card = ce('div', 'skills-category');
+                const items = cat.items.map(item => {
+                    const map = { expert: '突出', advanced: '良好', intermediate: '进阶' };
+                    return `<div class="skill-item"><span class="name">${item.name}</span><span class="level ${item.level}">${map[item.level]||item.level}</span></div>`;
+                }).join('');
+                card.innerHTML =
+                    `<div class="cat-title"><span class="icon">${cat.icon}</span> ${cat.category}</div>${items}`;
+                c.appendChild(card);
+            });
+        }
+
+        // 渲染教育
+        function renderEducation() {
+            const c = $('#educationContent');
+            const e = resume.education;
+            c.innerHTML =
+                `<div class="edu-card"><div class="header"><span class="school">${e.school}</span><span class="major">${e.major}</span><span class="date">${e.date}</span></div><div class="details"><p>${e.description}</p></div></div>`;
+            const ac = $('#awardsContent');
+            ac.innerHTML = '';
+            if (resume.awards.length > 0) {
+                const w = ce('div', 'awards-list');
+                resume.awards.forEach(a => { const item = ce('div', 'award-item', a);
+                    w.appendChild(item); });
+                ac.appendChild(w);
+            } else {
+                ac.innerHTML =
+                    `<div style="text-align:center;color:var(--text-muted);padding:16px 0;border:1px dashed var(--border);border-radius:var(--radius);">✨ 暂无证书，持续考取中…</div>`;
+            }
+        }
+
+        // 渲染证书
+        function renderPortfolio() {
+            const c = $('#portfolioGrid');
+            c.innerHTML = '';
+            const items = resume.portfolio || [];
+            if (items.length === 0) { c.innerHTML =
+                `<p style="color:var(--text-muted);text-align:center;padding:30px 0;">暂无证书图片</p>`; return; }
+            items.forEach(item => {
+                const div = ce('div', 'portfolio-item');
+                div.innerHTML =
+                    `<img src="${item.src}" alt="${item.caption||'证书'}" loading="lazy" decoding="async">${item.caption?`<div class="caption">${item.caption}</div>`:''}`;
+                c.appendChild(div);
+            });
+        }
+
+        // =====================================================================
+        //  星空粒子（增强版）
+        // =====================================================================
+        (function initStars() {
+            const canvas = document.getElementById('starfield');
+            const ctx = canvas.getContext('2d');
+            let W, H, stars = [];
+            const isMobile = window.innerWidth < 640;
+            const NUM = isMobile ? 100 : 180;
+            const MAXR = isMobile ? 1.5 : 2.0;
+
+            function resize() { W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resize);
+            resize();
+
+            function createStars() {
+                stars = [];
+                for (let i = 0; i < NUM; i++) {
+                    stars.push({
+                        x: Math.random() * W,
+                        y: Math.random() * H,
+                        r: Math.random() * (MAXR - 0.4) + 0.4,
+                        b: 0.4 + Math.random() * 0.6,
+                        sp: 0.003 + Math.random() * 0.015,
+                        ph: Math.random() * Math.PI * 2,
+                        gal: Math.random() > 0.6,
+                        hue: Math.random() > 0.7 ? 260 + Math.random() * 30 : 220 + Math.random() * 20
+                    });
+                }
+            }
+            createStars();
+
+            let meteor = null;
+
+            function draw(t) {
+                ctx.clearRect(0, 0, W, H);
+
+                // 银河背景
+                const g = ctx.createRadialGradient(W * 0.3, H * 0.2, 40, W * 0.7, H * 0.8, Math.max(W, H) * 0.7);
+                g.addColorStop(0, 'rgba(60,100,200,0.05)');
+                g.addColorStop(0.4, 'rgba(120,80,200,0.03)');
+                g.addColorStop(0.7, 'rgba(40,20,80,0.02)');
+                g.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, W, H);
+
+                // 星星
+                stars.forEach(s => {
+                    const dx = Math.sin(t * s.sp + s.ph) * 0.3;
+                    const dy = Math.cos(t * s.sp * 0.7 + s.ph) * 0.3;
+                    const x = s.x + dx;
+                    const y = s.y + dy;
+                    const tw = 0.6 + 0.4 * Math.sin(t * s.sp * 2.5 + s.ph);
+                    const br = s.b * tw;
+                    const r = s.r * (0.8 + 0.2 * br);
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, Math.PI * 2);
+                    const light = 60 + 30 * br;
+                    ctx.fillStyle = `hsl(${s.hue},75%,${light}%)`;
+                    ctx.shadowColor = `hsla(${s.hue},100%,70%,${0.15 * br})`;
+                    ctx.shadowBlur = 10 * br;
+                    ctx.fill();
+
+                    if (r > 1.3) {
+                        ctx.shadowBlur = 25;
+                        ctx.globalAlpha = 0.06 * br;
+                        ctx.beginPath();
+                        ctx.arc(x, y, r * 3.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `hsl(${s.hue},80%,80%)`;
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+                    }
+                    ctx.shadowBlur = 0;
+                });
+
+                // 流星
+                if (!meteor && Math.random() < 0.002) {
+                    meteor = {
+                        x: Math.random() * W * 0.8,
+                        y: Math.random() * H * 0.3,
+                        len: 50 + Math.random() * 80,
+                        speed: 6 + Math.random() * 8,
+                        angle: Math.PI / 4 + (Math.random() - 0.5) * 0.3,
+                        life: 1,
+                        decay: 0.008 + Math.random() * 0.01
+                    };
+                }
+                if (meteor) {
+                    meteor.x += meteor.speed * Math.cos(meteor.angle);
+                    meteor.y += meteor.speed * Math.sin(meteor.angle);
+                    meteor.life -= meteor.decay;
+                    if (meteor.life <= 0 || meteor.x > W || meteor.y > H) {
+                        meteor = null;
+                    } else {
+                        ctx.save();
+                        ctx.globalAlpha = meteor.life * 0.7;
+                        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+                        ctx.lineWidth = 1.5;
+                        ctx.shadowBlur = 30;
+                        ctx.shadowColor = 'rgba(150,200,255,0.5)';
+                        ctx.beginPath();
+                        ctx.moveTo(meteor.x, meteor.y);
+                        ctx.lineTo(meteor.x - meteor.len * Math.cos(meteor.angle),
+                            meteor.y - meteor.len * Math.sin(meteor.angle));
+                        ctx.stroke();
+                        // 头部光晕
+                        ctx.shadowBlur = 50;
+                        ctx.globalAlpha = meteor.life * 0.3;
+                        ctx.beginPath();
+                        ctx.arc(meteor.x, meteor.y, 8, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(200,230,255,0.6)';
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+
+                requestAnimationFrame(draw);
+            }
+            let st = Date.now();
+
+            function anim() { const t = (Date.now() - st) / 1000;
+                draw(t); }
+            anim();
+            window.addEventListener('resize', () => { resize();
+                createStars(); });
+        })();
+
+        // =====================================================================
+        //  光标粒子
+        // =====================================================================
+        (function initCursor() {
+            const canvas = document.getElementById('cursorCanvas');
+            const ctx = canvas.getContext('2d');
+            let W, H;
+            const particles = [];
+            const MAX_PARTICLES = 30;
+
+            function resize() { W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resize);
+            resize();
+
+            let mouseX = -1000,
+                mouseY = -1000;
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                for (let i = 0; i < 2; i++) {
+                    particles.push({
+                        x: mouseX + (Math.random() - 0.5) * 10,
+                        y: mouseY + (Math.random() - 0.5) * 10,
+                        vx: (Math.random() - 0.5) * 1.5,
+                        vy: (Math.random() - 0.5) * 1.5 - 0.5,
+                        life: 1,
+                        decay: 0.015 + Math.random() * 0.02,
+                        size: 2 + Math.random() * 3,
+                        hue: 200 + Math.random() * 50
+                    });
+                }
+                if (particles.length > MAX_PARTICLES) {
+                    particles.splice(0, particles.length - MAX_PARTICLES);
+                }
+            });
+
+            // 触摸支持
+            document.addEventListener('touchmove', (e) => {
+                const touch = e.touches[0];
+                if (touch) {
+                    mouseX = touch.clientX;
+                    mouseY = touch.clientY;
+                    for (let i = 0; i < 2; i++) {
+                        particles.push({
+                            x: mouseX + (Math.random() - 0.5) * 10,
+                            y: mouseY + (Math.random() - 0.5) * 10,
+                            vx: (Math.random() - 0.5) * 1.5,
+                            vy: (Math.random() - 0.5) * 1.5 - 0.5,
+                            life: 1,
+                            decay: 0.015 + Math.random() * 0.02,
+                            size: 2 + Math.random() * 3,
+                            hue: 200 + Math.random() * 50
+                        });
+                    }
+                    if (particles.length > MAX_PARTICLES) {
+                        particles.splice(0, particles.length - MAX_PARTICLES);
+                    }
+                }
+            }, { passive: true });
+
+            function drawParticles() {
+                ctx.clearRect(0, 0, W, H);
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.02;
+                    p.life -= p.decay;
+                    if (p.life <= 0) {
+                        particles.splice(i, 1);
+                        continue;
+                    }
+                    ctx.globalAlpha = p.life * 0.6;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsl(${p.hue},80%,70%)`;
+                    ctx.shadowColor = `hsla(${p.hue},100%,70%,${0.3 * p.life})`;
+                    ctx.shadowBlur = 15;
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0;
+                requestAnimationFrame(drawParticles);
+            }
+            drawParticles();
+        })();
+
+        // =====================================================================
+        //  滚动触发动画（Intersection Observer）
+        // =====================================================================
+        (function initScrollAnimations() {
+            const elements = document.querySelectorAll('.scroll-animate');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.15,
+                rootMargin: '0px 0px -50px 0px'
+            });
+            elements.forEach(el => observer.observe(el));
+        })();
+
+        // =====================================================================
+        //  主题切换
+        // =====================================================================
+        let darkMode = true;
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            darkMode = !darkMode;
+            const r = document.documentElement;
+            if (darkMode) {
+                r.style.setProperty('--text', '#e8edf5');
+                r.style.setProperty('--text-secondary', '#c0cfe0');
+                r.style.setProperty('--text-muted', '#8899bb');
+                r.style.setProperty('--card-bg', 'rgba(10,14,30,0.7)');
+                r.style.setProperty('--border', 'rgba(255,255,255,0.08)');
+                r.style.setProperty('--shadow', '0 8px 32px rgba(0,0,0,0.5)');
+                this.textContent = '🌓';
+            } else {
+                r.style.setProperty('--text', '#1a1a2e');
+                r.style.setProperty('--text-secondary', '#3a3a5a');
+                r.style.setProperty('--text-muted', '#6a6a8a');
+                r.style.setProperty('--card-bg', 'rgba(240,244,255,0.85)');
+                r.style.setProperty('--border', 'rgba(0,0,0,0.08)');
+                r.style.setProperty('--shadow', '0 8px 32px rgba(0,0,0,0.1)');
+                this.textContent = '☀️';
+            }
+        });
+
+        // =====================================================================
+        //  背景音乐《Old Memory》播放控制
+        // =====================================================================
+        (function initMusic() {
+            const audio = document.getElementById('bgMusic');
+            const btn = document.getElementById('musicToggle');
+            const hint = document.getElementById('musicHint');
+            if (!audio || !btn) return;
+
+            function setError(msg) {
+                btn.classList.add('error');
+                btn.classList.remove('playing', 'waiting');
+                btn.textContent = '🔇';
+                if (msg) console.warn(msg);
+            }
+            function setPlaying(on) {
+                btn.classList.toggle('playing', on);
+                btn.classList.remove('error', 'waiting');
+                btn.textContent = '🎵';
+                if (on) hideHint();
+            }
+            function setWaiting() {
+                // 被浏览器拦截不算错误：轻柔呼吸 + 页面顶部提示
+                btn.classList.add('waiting');
+                btn.classList.remove('error', 'playing');
+                btn.textContent = '🎵';
+            }
+            function showHint() { if (hint) hint.classList.add('show'); }
+            function hideHint() { if (hint) hint.classList.remove('show'); }
+
+            function tryPlay() {
+                const p = audio.play();
+                if (p && typeof p.then === 'function') {
+                    p.then(() => setPlaying(true))
+                     .catch(() => {
+                         setWaiting();
+                         showHint();
+                     });
+                } else {
+                    setPlaying(true);
+                }
+            }
+
+            // 打开页面立即尝试自动播放
+            tryPlay();
+            // 微信内置浏览器：需等 WeixinJSBridgeReady 后才允许自动播放
+            document.addEventListener('WeixinJSBridgeReady', tryPlay, false);
+
+            // 若被浏览器拦截：访客第一次点击/触摸/按键页面任意位置时自动响起
+            function startOnGesture(e) {
+                if (btn.contains(e.target)) return; // 音乐按钮由自己的点击逻辑控制
+                if (audio.paused) tryPlay();
+                else stopWaiting();
+            }
+            function stopWaiting() {
+                document.removeEventListener('pointerdown', startOnGesture);
+                document.removeEventListener('touchstart', startOnGesture);
+                document.removeEventListener('keydown', startOnGesture);
+            }
+            document.addEventListener('pointerdown', startOnGesture);
+            document.addEventListener('touchstart', startOnGesture, { passive: true });
+            document.addEventListener('keydown', startOnGesture);
+            // 音乐真正响起后不再需要全局监听
+            audio.addEventListener('play', () => { setPlaying(true); stopWaiting(); });
+            audio.addEventListener('pause', () => setPlaying(false));
+
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (audio.paused || audio.ended) {
+                    tryPlay();
+                } else {
+                    audio.pause();
+                    setPlaying(false);
+                }
+            });
+
+            // 兜底：若资源加载失败（如文件不存在），标红提示
+            audio.addEventListener('error', () => {
+                if (!audio.readyState) setError('背景音乐加载失败：请确认《蓝云木 - Old Memory.mp3》在本文件夹中。');
+            });
+        })();
+
+        // =====================================================================
+        //  返回顶部 + 平滑滚动
+        // =====================================================================
+        (function() {
+            const btn = $('#backTop');
+            window.addEventListener('scroll', () => { btn.classList.toggle('visible', window.scrollY > 300); });
+            btn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+            document.querySelectorAll('a[href^="#"]').forEach(a => {
+                a.addEventListener('click', (e) => {
+                    const t = document.querySelector(a.getAttribute('href'));
+                    if (t) { e.preventDefault();
+                        t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+                });
+            });
+        })();
+
+        // =====================================================================
+        //  vibecoding 飞机大战全屏浮窗
+        // =====================================================================
+        (function initVibecoding() {
+            const start = document.getElementById('vibecodingStart');
+            const modal = document.getElementById('vibecodingModal');
+            const close = document.getElementById('vibecodingClose');
+            const iframe = document.getElementById('vibecodingIframe');
+            const GAME_URL = 'https://fjdz-tttt1.netlify.app/';
+            if (!start || !modal || !iframe) return;
+
+            function openModal() {
+                // 首次打开时才加载 iframe，避免占位空白
+                if (iframe.src !== GAME_URL) iframe.src = GAME_URL;
+                modal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeModal() {
+                modal.classList.remove('open');
+                document.body.style.overflow = '';
+                // 关闭后清空 iframe，停止游戏音频与资源占用
+                iframe.src = '';
+            }
+
+            start.addEventListener('click', openModal);
+            close.addEventListener('click', closeModal);
+            // 点击遮罩空白处关闭
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+            // ESC 关闭
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+            });
+        })();
+
+        // =====================================================================
+        //  初始化
+        // =====================================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHighlights();
+            renderContact();
+            renderExperience();
+            renderSkills();
+            renderEducation();
+            renderPortfolio();
+            console.log('✨ 奉世文 · 星空简历加载完成（特效增强版）');
+        });
+    </script>
+</body>
+</html>
